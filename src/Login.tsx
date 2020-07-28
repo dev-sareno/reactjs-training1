@@ -1,21 +1,22 @@
 import React, { SyntheticEvent } from "react";
-import Axios, { AxiosResponse } from "axios"
-import { Flex, Button, Input } from "@fluentui/react-northstar";
+import Axios, { AxiosResponse, AxiosError } from "axios"
+import { Flex, Button, Input, Alert } from "@fluentui/react-northstar";
+import { withRouter } from "react-router-dom";
+import MsLinkButton from "./controls/MsLinkButton";
 
 export class Login extends React.Component {
   state = {
     username: '',
     password: '',
     errorMessage: null,
+    isLoggingIn: false,
   }
 
   constructor(props: any) {
     super(props);
 
-    this.handleInputChanged = this.handleInputChanged.bind(this);
+    this.onInputChange = this.onInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.onUsernameChange = this.onUsernameChange.bind(this);
-    this.onPasswordChange = this.onPasswordChange.bind(this);
   }
 
   componentDidMount() {
@@ -24,54 +25,53 @@ export class Login extends React.Component {
   componentWillUnmount() {
   }
 
-  handleInputChanged(e: any) {
-    const name = e.target.name;
-    const value = e.target.value;
-    this.setState({
-      [name]: value,
-      errorMessage: null,
-      isLoggingIn: false,
-    });
-  }
-
-  handleSubmit() {
+  async handleSubmit(): Promise<boolean> {
     const { username, password } = this.state;
     if (username && password) {
       this.setState({
         isLoggingIn: true,
       });
-      Axios.post('/api/reactjs/login', {
-        username,
-        password,
-      }).then((res: AxiosResponse) => {
-        console.log('Success', res);
-      }, (err: AxiosResponse) => {
-        console.log('err', err.status);
-        const errorMessage = err.status === 403 ? 'Invalid username or password' : 'Something went wrong';
+
+      try {
+        const login = await Axios.post('/api/reactjs/login', {
+          username,
+          password,
+        });
+        console.log('Success', login);
+        this.setState({
+          errorMessage: null,
+        });
+        return true;
+      } catch (err) {
+        console.log('err', err);
+        const errorMessage = err.response?.status ? 'Invalid username or password' : 'Something went wrong';
         this.setState({
           errorMessage
-        })
-      }).then(() => {
+        });
+        return false;
+      } finally {
         console.log('Completed');
         this.setState({
-          isLoggingIn: true,
+          isLoggingIn: false,
         });
-      });
+      }
     } else {
       this.setState({
         errorMessage: 'Username and password are required'
       });
+      return false;
     }
   }
 
-  onUsernameChange(e: SyntheticEvent) {
+  onInputChange(e: SyntheticEvent) {
     const elem = e.target as HTMLInputElement;
-    console.log(elem.value);
-  }
-
-  onPasswordChange(e: SyntheticEvent) {
-    const elem = e.target as HTMLInputElement;
-    console.log(elem.value);
+    const name = elem.name;
+    const value = elem.value;
+    this.setState({
+      [name]: value,
+      errorMessage: null,
+      isLoggingIn: false,
+    });
   }
 
   render() {
@@ -80,10 +80,17 @@ export class Login extends React.Component {
             hAlign={'center'}>
         <Flex className={'Login-box'} column={true} gap={'gap.small'}>
           <h1>Login</h1>
-          <Input type={'text'} label={'Username'} fluid onChange={this.onUsernameChange}/>
-          <Input type={'password'} label={'Password'} fluid onChange={this.onPasswordChange}/>
+          <Input type={'text'} label={'Username'} name={'username'} fluid onChange={this.onInputChange}/>
+          <Input type={'password'} label={'Password'} name={'password'} fluid onChange={this.onInputChange}/>
+          {this.state.errorMessage
+          && <Alert
+              content={this.state.errorMessage}
+              variables={{
+                oof: true,
+              }}
+          />}
           <Flex className={'Login-submit-container'} hAlign={'end'}>
-            <Button content={'Login'} primary/>
+            <MsLinkButton content={'login'} disabled={this.state.isLoggingIn} url={'/shoes'} callback={() => this.handleSubmit()}/>
           </Flex>
         </Flex>
       </Flex>
