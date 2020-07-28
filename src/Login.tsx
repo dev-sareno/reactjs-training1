@@ -1,8 +1,7 @@
 import React, { SyntheticEvent } from "react";
 import Axios, { AxiosResponse, AxiosError } from "axios"
-import { Flex, Button, Input, Alert } from "@fluentui/react-northstar";
-import { withRouter } from "react-router-dom";
-import MsLinkButton from "./controls/MsLinkButton";
+import { Flex, Input, Alert } from "@fluentui/react-northstar";
+import ButtonWithHistory from "./controls/ButtonWithHistory";
 
 export class Login extends React.Component {
   state = {
@@ -25,41 +24,32 @@ export class Login extends React.Component {
   componentWillUnmount() {
   }
 
-  async handleSubmit(): Promise<boolean> {
+  handleSubmit(history: any) {
     const { username, password } = this.state;
     if (username && password) {
       this.setState({
         isLoggingIn: true,
       });
 
-      try {
-        const login = await Axios.post('/api/reactjs/login', {
-          username,
-          password,
-        });
-        console.log('Success', login);
-        this.setState({
-          errorMessage: null,
-        });
-        return true;
-      } catch (err) {
+      Axios.post('/api/reactjs/login', {
+        username,
+        password,
+      }).then((res: AxiosResponse) => {
+        console.log('Success', res);
+        history.push('/shoes')
+      }).catch((err: AxiosError) => {
         console.log('err', err);
         const errorMessage = err.response?.status ? 'Invalid username or password' : 'Something went wrong';
         this.setState({
           errorMessage
         });
-        return false;
-      } finally {
+      }).then(() => {
         console.log('Completed');
-        this.setState({
-          isLoggingIn: false,
-        });
-      }
+      });
     } else {
       this.setState({
         errorMessage: 'Username and password are required'
       });
-      return false;
     }
   }
 
@@ -90,7 +80,9 @@ export class Login extends React.Component {
               }}
           />}
           <Flex className={'Login-submit-container'} hAlign={'end'}>
-            <MsLinkButton content={'login'} disabled={this.state.isLoggingIn} url={'/shoes'} callback={() => this.handleSubmit()}/>
+            <ButtonWithHistory content={'login'}
+                               disabled={this.state.isLoggingIn}
+                               onClick={this.handleSubmit}/>
           </Flex>
         </Flex>
       </Flex>
