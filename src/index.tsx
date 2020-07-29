@@ -4,13 +4,20 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { Provider, teamsTheme } from '@fluentui/react-northstar'
+import { AppMenu } from './app-menu/AppMenu';
 
+// ReactDOM.render(
+//   <React.StrictMode>
+//     <Provider theme={teamsTheme}>
+//       <App />
+//     </Provider>
+//   </React.StrictMode>,
+//   document.getElementById('root')
+// );
 ReactDOM.render(
-  <React.StrictMode>
-    <Provider theme={teamsTheme}>
-      <App />
-    </Provider>
-  </React.StrictMode>,
+  <Provider theme={teamsTheme}>
+    <App />
+  </Provider>,
   document.getElementById('root')
 );
 
